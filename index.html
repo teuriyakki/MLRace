@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Math Tower Race 🏰🔥</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+<script>
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCT-ZRVeNvYeKzUUbDPlp8VpKrqYycrOuU",
+  authDomain: "mltower.firebaseapp.com",
+  databaseURL: "https://mltower-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "mltower",
+  storageBucket: "mltower.firebasestorage.app",
+  messagingSenderId: "1078604707737",
+  appId: "1:1078604707737:web:b871f9be08a328b6da8508"
+};
+</script>
+<style>
+/* ───── reset ───── */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#0c0818;
+  --surf:rgba(255,255,255,.06);
+  --bord:rgba(255,255,255,.09);
+  --gold:#FFD700;
+  --amber:#FF9900;
+  --fire:#FF3300;
+  --green:#22c55e;
+  --red:#ef4444;
+  --muted:#7777aa;
+}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:#fff;display:flex;justify-content:center;}
+
+/* screens */
+.screen{display:none;width:100%;max-width:480px;height:100%;flex-direction:column;align-items:center;
+  position:absolute;top:0;left:50%;transform:translateX(-50%);overflow-y:auto;overflow-x:hidden;z-index:10;}
+.screen.active{display:flex;}
+.screen::-webkit-scrollbar{width:0;}
+
+/* stars */
+.starsbg{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+.star{position:absolute;border-radius:50%;background:#fff;animation:twk linear infinite;}
+@keyframes twk{0%,100%{opacity:.15;transform:scale(1);}50%{opacity:.8;transform:scale(1.3);}}
+
+/* embers */
+.ember{position:fixed;border-radius:50%;pointer-events:none;z-index:0;animation:embr linear infinite;}
+@keyframes embr{from{transform:translateY(0)scale(1);opacity:.7;}to{transform:translateY(-100vh)scale(0);opacity:0;}}
+
+/* shared */
+.card{background:var(--surf);border:1px solid var(--bord);border-radius:18px;padding:1.1rem 1rem;width:100%;position:relative;overflow:hidden;}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--amber),var(--gold),var(--amber),transparent);}
+.lbl{font-family:'Fredoka One',cursive;font-size:.7rem;color:#FF9966;letter-spacing:2.5px;text-transform:uppercase;text-align:center;margin-bottom:.7rem;}
+.txt{width:100%;padding:.7rem 1rem;border-radius:12px;border:1.5px solid var(--bord);background:rgba(255,255,255,.06);color:#fff;
+  font-family:'Nunito',sans-serif;font-size:1rem;font-weight:800;outline:none;text-align:center;letter-spacing:1px;transition:border-color .2s;}
+.txt:focus{border-color:var(--gold);}
+.txt::placeholder{color:#3a3a55;font-weight:400;letter-spacing:0;}
+.code{letter-spacing:6px;font-size:1.1rem;}
+.dgrid{display:grid;grid-template-columns:1fr 1fr;gap:.4rem;}
+.db{padding:.6rem .3rem;border-radius:12px;border:1.5px solid var(--bord);background:rgba(255,255,255,.04);color:var(--muted);
+  font-family:'Nunito',sans-serif;font-size:.78rem;font-weight:900;cursor:pointer;transition:all .14s;text-align:center;}
+.db[data-d="0"].sel{border-color:var(--gold);background:rgba(255,215,0,.1);color:var(--gold);}
+.db[data-d="1"].sel{border-color:var(--green);background:rgba(34,197,94,.1);color:var(--green);}
+.db[data-d="2"].sel{border-color:#fbbf24;background:rgba(251,191,36,.1);color:#fbbf24;}
+.db[data-d="3"].sel{border-color:var(--red);background:rgba(239,68,68,.1);color:var(--red);}
+.db:hover{border-color:rgba(255,255,255,.2);}
+.chips{display:flex;gap:.35rem;flex-wrap:wrap;margin-top:.5rem;}
+.chip{display:inline-flex;align-items:center;gap:.25rem;background:rgba(255,255,255,.05);border:1px solid var(--bord);
+  border-radius:30px;padding:.15rem .55rem;font-size:.64rem;color:var(--muted);}
+.chip strong{color:#fff;}
+.bfire{font-family:'Fredoka One',cursive;font-size:1.1rem;width:100%;padding:.8rem;border:none;border-radius:50px;
+  background:linear-gradient(135deg,#FF6600,#FF2200);color:#fff;cursor:pointer;
+  box-shadow:0 5px 0 #881100,0 8px 22px rgba(255,60,0,.4);transition:all .17s;
+  display:flex;align-items:center;justify-content:center;gap:.45rem;flex-shrink:0;}
+.bfire:hover{transform:translateY(-2px);box-shadow:0 7px 0 #881100,0 12px 26px rgba(255,60,0,.5);}
+.bfire:active{transform:translateY(1px);box-shadow:0 2px 0 #881100;}
+.bfire:disabled{opacity:.45;cursor:not-allowed;transform:none;}
+.bghost{font-family:'Fredoka One',cursive;font-size:.95rem;width:100%;padding:.7rem;border-radius:50px;
+  border:1.5px solid var(--bord);background:rgba(255,255,255,.05);color:#fff;cursor:pointer;transition:all .17s;text-align:center;flex-shrink:0;}
+.bghost:hover{border-color:rgba(255,255,255,.25);background:rgba(255,255,255,.1);}
+.errmsg{font-size:.72rem;color:var(--red);text-align:center;min-height:.9rem;}
+
+/* logo */
+.logoico{font-size:2.8rem;display:block;text-align:center;animation:flt 3s ease-in-out infinite;}
+@keyframes flt{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+.logotitle{font-family:'Fredoka One',cursive;font-size:2.3rem;
+  background:linear-gradient(170deg,#FFD700,#FF8C00);-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  line-height:1;text-align:center;}
+.logosub{font-size:.73rem;color:#FF9966;letter-spacing:2px;text-align:center;text-transform:uppercase;}
+
+/* mode tabs */
+.mtabs{display:flex;gap:.4rem;width:100%;}
+.mtab{flex:1;padding:.6rem;border-radius:12px;border:1.5px solid var(--bord);background:rgba(255,255,255,.04);
+  color:var(--muted);font-family:'Fredoka One',cursive;font-size:.82rem;cursor:pointer;transition:all .14s;text-align:center;}
+.mtab.sel{border-color:var(--gold);background:rgba(255,215,0,.1);color:var(--gold);}
+.rsec{display:flex;flex-direction:column;gap:.5rem;width:100%;}
+
+/* intro / lobby bg */
+#introScreen{background:radial-gradient(ellipse at 50% -8%,#3d1000 0%,#0c0818 60%);padding:1.3rem 1rem 2rem;gap:.85rem;justify-content:flex-start;}
+#lobbyScreen{background:radial-gradient(ellipse at 50% -8%,#3d1000 0%,#0c0818 60%);padding:1.3rem 1rem 2rem;gap:.85rem;align-items:center;}
+
+/* ── avatar picker ── */
+.av-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:.45rem;}
+.av-btn{
+  aspect-ratio:.75;border-radius:14px;border:2.5px solid transparent;
+  background:rgba(255,255,255,.05);cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:all .15s;padding:.2rem;gap:0;overflow:hidden;
+}
+.av-btn:hover{background:rgba(255,215,0,.1);transform:scale(1.06);}
+.av-btn.sel{border-color:var(--gold);background:rgba(255,215,0,.15);box-shadow:0 0 12px rgba(255,215,0,.3);}
+.av-btn svg{width:100%;height:100%;display:block;}
+
+/* ── lobby ── */
+.lby-code-box{background:rgba(255,215,0,.07);border:1px solid rgba(255,215,0,.22);border-radius:14px;padding:.65rem;text-align:center;width:100%;}
+.lby-codelbl{font-size:.6rem;color:#cca800;letter-spacing:2px;text-transform:uppercase;}
+.lby-codeval{font-family:'Fredoka One',cursive;font-size:2.4rem;color:var(--gold);letter-spacing:8px;text-shadow:0 0 20px rgba(255,215,0,.4);}
+.copylnk{font-size:.6rem;color:var(--muted);background:none;border:none;cursor:pointer;text-decoration:underline;font-family:'Nunito',sans-serif;}
+.copylnk:hover{color:#fff;}
+.plr-list{width:100%;display:flex;flex-direction:column;gap:.38rem;max-height:180px;overflow-y:auto;}
+.plr-row{background:var(--surf);border:1px solid var(--bord);border-radius:11px;padding:.48rem .75rem;display:flex;align-items:center;gap:.55rem;}
+.plr-row.me{border-color:rgba(255,215,0,.28);}
+.plr-nm{font-weight:900;font-size:.82rem;flex:1;}
+.plr-ico{width:32px;height:32px;flex-shrink:0;}
+.plr-ico svg{width:100%;height:100%;}
+.lobbyst{font-size:.78rem;color:var(--muted);text-align:center;}
+.lobbyst strong{color:#fff;}
+.dots::after{content:'';animation:dd 1.5s infinite;}
+@keyframes dd{0%{content:'.';}33%{content:'..';}66%{content:'...';}100%{content:'';}}
+
+/* ── countdown ── */
+#countScreen{justify-content:center;align-items:center;gap:.8rem;background:radial-gradient(ellipse at 50% 0%,#3d1000 0%,#0c0818 65%);}
+.cntn{font-family:'Fredoka One',cursive;font-size:9rem;color:var(--gold);text-shadow:0 0 80px rgba(255,215,0,.6);animation:cpop .55s ease;line-height:1;}
+@keyframes cpop{from{transform:scale(2);opacity:0;}to{transform:scale(1);opacity:1;}}
+.cntlbl{font-size:.85rem;color:#FF9966;letter-spacing:3px;text-transform:uppercase;}
+
+/* ═══════════════════════════════════════
+   GAME SCREEN
+═══════════════════════════════════════ */
+#gameScreen{flex-direction:column;background:var(--bg);padding:0;}
+
+/* hud */
+.hud{width:100%;display:flex;align-items:center;gap:.45rem;padding:.42rem .7rem;
+  background:rgba(0,0,0,.65);border-bottom:2px solid rgba(255,80,0,.3);flex-shrink:0;}
+.hud-av{width:36px;height:36px;flex-shrink:0;}
+.hud-av svg{width:100%;height:100%;}
+.hud-inf{flex:1;min-width:0;}
+.hud-nm{font-weight:900;font-size:.68rem;color:var(--gold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hud-pt{font-family:'Fredoka One',cursive;font-size:.7rem;color:#FF9966;}
+.hud-mid{font-family:'Fredoka One',cursive;font-size:.66rem;color:#fff;
+  background:rgba(255,60,0,.3);border:1px solid rgba(255,100,0,.28);
+  padding:.16rem .5rem;border-radius:20px;text-align:center;white-space:nowrap;flex-shrink:0;}
+.hud-qn{font-size:.54rem;opacity:.7;}
+
+/* game body: tower | questions | live-lb */
+.gbody{flex:1;display:flex;width:100%;overflow:hidden;}
+
+/* ───── TOWER PANEL ───── */
+/*
+  Layout (bottom to top):
+    [lava]         ← thin red glow at the very bottom, grows upward
+    [stone blocks] ← the tower, stacked from bottom
+    [character]    ← stands ON TOP of the highest block
+    [sky]          ← dark starry space above character
+*/
+.twrpanel{
+  width:88px;flex-shrink:0;position:relative;overflow:hidden;
+  /* sky gradient — dark top, slightly lighter near ground */
+  background:linear-gradient(180deg,#040210 0%,#08041a 50%,#0d0520 100%);
+  border-right:1px solid rgba(255,80,0,.12);
+}
+
+/* === TOWER CANVAS (fills whole panel) === */
+#twrCanvas{
+  position:absolute;
+  top:0;left:0;
+  width:100%;height:100%;
+  display:block;
+}
+
+/* ───── QUESTION PANEL ───── */
+.qpanel{flex:1;display:flex;flex-direction:column;padding:.62rem .68rem 1rem;overflow-y:auto;gap:.58rem;}
+.qpanel::-webkit-scrollbar{width:0;}
+.lvlbadge{display:inline-flex;align-items:center;gap:.3rem;padding:.17rem .58rem;border-radius:30px;font-size:.63rem;font-weight:900;align-self:flex-start;}
+.lv1{background:rgba(34,197,94,.14);color:var(--green);border:1px solid rgba(34,197,94,.28);}
+.lv2{background:rgba(251,191,36,.14);color:#fbbf24;border:1px solid rgba(251,191,36,.28);}
+.lv3{background:rgba(239,68,68,.14);color:var(--red);border:1px solid rgba(239,68,68,.28);}
+.qtxt{font-family:'Fredoka One',cursive;font-size:1.28rem;color:#fff;line-height:1.35;}
+.ogrid{display:grid;grid-template-columns:1fr 1fr;gap:.38rem;}
+.opt{padding:.58rem .4rem;border-radius:12px;border:1.5px solid var(--bord);background:rgba(255,255,255,.05);color:#fff;
+  cursor:pointer;font-family:'Nunito',sans-serif;font-size:.83rem;font-weight:800;
+  transition:all .13s;display:flex;align-items:center;gap:.36rem;line-height:1.25;}
+.opt:hover:not(:disabled){border-color:rgba(255,215,0,.4);background:rgba(255,215,0,.07);transform:translateY(-1px);}
+.opt:disabled{cursor:default;}
+.optl{width:21px;height:21px;border-radius:6px;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;
+  font-family:'Fredoka One',cursive;font-size:.6rem;flex-shrink:0;transition:background .13s;}
+.opt.ook{border-color:var(--green)!important;background:rgba(34,197,94,.15)!important;animation:bok .3s ease;}
+.opt.ook .optl{background:var(--green);color:#000;}
+.opt.ono{border-color:var(--red)!important;background:rgba(239,68,68,.13)!important;animation:bno .34s ease;}
+.opt.ono .optl{background:var(--red);}
+.opt.orv{border-color:var(--green)!important;background:rgba(34,197,94,.08)!important;}
+.opt.orv .optl{background:var(--green);color:#000;}
+@keyframes bok{0%{transform:scale(1);}50%{transform:scale(1.05);}100%{transform:scale(1);}}
+@keyframes bno{0%,100%{transform:translateX(0);}25%{transform:translateX(-6px);}75%{transform:translateX(6px);}}
+.fb{text-align:center;font-family:'Fredoka One',cursive;font-size:.8rem;min-height:1.2rem;}
+.fbok{color:var(--gold);}
+.fbno{color:var(--red);}
+.speedtip{background:rgba(255,215,0,.07);border:1px solid rgba(255,215,0,.12);border-radius:10px;padding:.28rem .58rem;font-size:.6rem;color:#c8a000;line-height:1.5;}
+.speedtip strong{color:var(--gold);}
+.bnext{font-family:'Fredoka One',cursive;font-size:.88rem;padding:.58rem;border:none;border-radius:12px;
+  background:linear-gradient(135deg,#FF6600,#FF2200);color:#fff;cursor:pointer;
+  box-shadow:0 3px 0 #881100;transition:all .13s;display:none;flex-shrink:0;}
+.bnext:hover{transform:translateY(-1px);box-shadow:0 4px 0 #881100;}
+
+/* live lb */
+.lbstrip{width:66px;flex-shrink:0;background:rgba(0,0,0,.38);border-left:1px solid rgba(255,60,0,.12);flex-direction:column;overflow:hidden;display:none;}
+.lbstrip.on{display:flex;}
+.lbttl{font-family:'Fredoka One',cursive;font-size:.52rem;color:#FF9966;letter-spacing:1.5px;text-transform:uppercase;text-align:center;padding:.28rem 0;border-bottom:1px solid rgba(255,60,0,.12);flex-shrink:0;}
+.lbscrl{flex:1;overflow-y:auto;}
+.lbscrl::-webkit-scrollbar{width:0;}
+.lbent{display:flex;align-items:center;gap:2px;padding:.22rem .28rem;border-bottom:1px solid rgba(255,255,255,.03);}
+.lbent.lme{background:rgba(255,215,0,.07);}
+.lbrk{font-family:'Fredoka One',cursive;font-size:.54rem;color:var(--muted);width:10px;flex-shrink:0;text-align:center;}
+.lbav{width:20px;height:20px;flex-shrink:0;}
+.lbav svg{width:100%;height:100%;}
+.lbinf{flex:1;min-width:0;}
+.lbnm{font-weight:800;font-size:.52rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lbsc{font-family:'Fredoka One',cursive;font-size:.52rem;color:var(--gold);}
+
+/* ── TOAST ── */
+.toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);background:rgba(6,3,18,.97);
+  border-radius:18px;padding:.9rem 1.5rem;text-align:center;z-index:300;border:2px solid transparent;
+  pointer-events:none;transition:transform .2s cubic-bezier(.25,.46,.45,.94);min-width:145px;max-width:240px;}
+.toast.show{transform:translate(-50%,-50%) scale(1);}
+.toast.tw{border-color:var(--gold);box-shadow:0 0 35px rgba(255,215,0,.28);}
+.toast.tl{border-color:var(--red);}
+.tem{font-size:1.85rem;}
+.ttx{font-family:'Fredoka One',cursive;font-size:.88rem;color:var(--gold);margin-top:.15rem;}
+
+/* ── RESULT ── */
+#resultScreen{background:radial-gradient(ellipse at 50% -5%,#0a2a0a 0%,#0c0818 55%);padding:1.3rem 1rem 2rem;gap:.88rem;align-items:center;}
+.res-ico{font-size:2.6rem;text-align:center;}
+.res-title{font-family:'Fredoka One',cursive;font-size:1.72rem;color:var(--gold);text-align:center;text-shadow:0 0 28px rgba(255,215,0,.4);}
+.res-sub{font-size:.73rem;color:#FF9966;text-align:center;}
+.sbig{font-family:'Fredoka One',cursive;font-size:4rem;color:var(--gold);text-align:center;text-shadow:0 0 45px rgba(255,215,0,.5);line-height:1;}
+.slbl{font-size:.67rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;text-align:center;}
+.pctbar{width:100%;max-width:440px;height:10px;background:rgba(255,255,255,.06);border-radius:30px;overflow:hidden;border:1px solid var(--bord);}
+.pctfill{height:100%;border-radius:30px;background:linear-gradient(90deg,var(--green),var(--gold),var(--fire));transition:width 1.1s ease;}
+.srow{display:flex;gap:.5rem;width:100%;max-width:440px;}
+.sbox{flex:1;background:var(--surf);border:1px solid var(--bord);border-radius:13px;padding:.62rem .38rem;text-align:center;}
+.sv{font-family:'Fredoka One',cursive;font-size:1.28rem;}
+.sl{font-size:.57rem;color:var(--muted);margin-top:.1rem;letter-spacing:.5px;}
+.flb{width:100%;max-width:440px;display:flex;flex-direction:column;gap:.32rem;}
+.flbttl{font-family:'Fredoka One',cursive;font-size:.68rem;letter-spacing:2px;text-transform:uppercase;color:#FF9966;margin-bottom:.28rem;}
+.flbrow{display:flex;align-items:center;gap:.5rem;background:var(--surf);border:1px solid var(--bord);border-radius:12px;padding:.52rem .7rem;}
+.flbrow.me{border-color:rgba(255,215,0,.28);background:rgba(255,215,0,.05);}
+.flbpos{font-family:'Fredoka One',cursive;font-size:1.05rem;width:26px;text-align:center;flex-shrink:0;}
+.flbav{width:30px;height:30px;flex-shrink:0;}
+.flbav svg{width:100%;height:100%;}
+.flbinf{flex:1;}
+.flbnm{font-weight:900;font-size:.8rem;}
+.flbst{font-size:.63rem;color:var(--muted);margin-top:.08rem;}
+.flbsc{font-family:'Fredoka One',cursive;font-size:.92rem;color:var(--gold);}
+.revwrap{width:100%;max-width:440px;}
+.revhd{font-family:'Fredoka One',cursive;font-size:.66rem;letter-spacing:2px;text-transform:uppercase;color:#FF9966;margin-bottom:.45rem;}
+.revlist{display:flex;flex-direction:column;gap:.28rem;max-height:250px;overflow-y:auto;padding-right:2px;}
+.revlist::-webkit-scrollbar{width:3px;}
+.revlist::-webkit-scrollbar-thumb{background:var(--bord);border-radius:6px;}
+.revitem{background:var(--surf);border:1px solid var(--bord);border-radius:10px;padding:.52rem .68rem;display:flex;gap:.48rem;align-items:flex-start;}
+.riw{border-color:rgba(239,68,68,.27);background:rgba(239,68,68,.06);}
+.riok{border-color:rgba(34,197,94,.17);background:rgba(34,197,94,.04);}
+.revn{width:19px;height:19px;border-radius:5px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;
+  font-family:'Fredoka One',cursive;font-size:.53rem;flex-shrink:0;margin-top:1px;}
+.riw .revn{background:var(--red);}
+.riok .revn{background:rgba(34,197,94,.3);color:var(--green);}
+.revq{font-size:.7rem;font-weight:800;line-height:1.3;}
+.reva{font-size:.63rem;color:var(--muted);margin-top:.13rem;line-height:1.3;}
+.reva strong{color:var(--green);}
+.reva .ma{color:var(--red);}
+.revp{font-family:'Fredoka One',cursive;font-size:.6rem;color:var(--gold);margin-left:auto;white-space:nowrap;flex-shrink:0;}
+.btnrow{display:flex;gap:.45rem;width:100%;max-width:440px;flex-wrap:wrap;}
+.bre{flex:1;padding:.7rem 1rem;border-radius:12px;border:none;background:linear-gradient(135deg,#FF6600,#FF2200);color:#fff;
+  font-family:'Fredoka One',cursive;font-size:.85rem;cursor:pointer;box-shadow:0 3px 0 #881100;transition:all .17s;}
+.bre:hover{transform:translateY(-1px);}
+
+/* confetti */
+.cf{position:fixed;border-radius:2px;pointer-events:none;z-index:400;animation:cff linear forwards;}
+@keyframes cff{0%{transform:translateY(-10px)rotate(0);opacity:1;}100%{transform:translateY(110vh)rotate(720deg);opacity:0;}}
+</style>
+</head>
+<body>
+<div class="starsbg" id="starsBg"></div>
+
+<!-- ═══ INTRO ═══ -->
+<div id="introScreen" class="screen active">
+  <span class="logoico">🏰🔥</span>
+  <div class="logotitle">MATH TOWER RACE</div>
+  <div class="logosub">Quantitative Reasoning Challenge</div>
+
+  <!-- Profile & avatar -->
+  <div class="card">
+    <div class="lbl">👤 Profil & Karakter</div>
+    <input class="txt" id="nameInput" placeholder="Nama kamu..." maxlength="22" style="margin-bottom:.65rem;">
+    <div class="av-grid" id="avGrid"></div>
+  </div>
+
+  <!-- Mode -->
+  <div class="card">
+    <div class="lbl">🎮 Mode Permainan</div>
+    <div class="mtabs">
+      <div class="mtab sel" id="tabSolo"   onclick="selMode('solo')">🧍 Solo</div>
+      <div class="mtab"    id="tabCreate"  onclick="selMode('create')">✨ Buat Room</div>
+      <div class="mtab"    id="tabJoin"    onclick="selMode('join')">🔗 Gabung</div>
+    </div>
+
+    <!-- SOLO panel -->
+    <div id="panelSolo" class="rsec" style="margin-top:.7rem;">
+      <div class="lbl" style="margin-bottom:.35rem;">⚙️ Level Soal</div>
+      <div class="dgrid" id="soloDiff">
+        <button class="db sel" data-d="0">🎯 Semua</button>
+        <button class="db" data-d="1">🟢 Easy</button>
+        <button class="db" data-d="2">🟡 Medium</button>
+        <button class="db" data-d="3">🔴 Hard</button>
+      </div>
+      <div class="chips">
+        <div class="chip">📝 <strong id="chipS">45</strong> soal</div>
+        <div class="chip">⚡ Cepat = Poin Lebih Tinggi</div>
+        <div class="chip">🏰 Benar → Tower naik</div>
+      </div>
+      <div class="errmsg" id="errSolo"></div>
+      <button class="bfire" onclick="startSolo()">🔥 Mulai Solo!</button>
+    </div>
+
+    <!-- CREATE panel -->
+    <div id="panelCreate" class="rsec" style="margin-top:.7rem;display:none;">
+      <div class="dgrid" id="multiDiff">
+        <button class="db sel" data-d="0">🎯 Semua</button>
+        <button class="db" data-d="1">🟢 Easy</button>
+        <button class="db" data-d="2">🟡 Medium</button>
+        <button class="db" data-d="3">🔴 Hard</button>
+      </div>
+      <div class="chips">
+        <div class="chip">📝 <strong id="chipM">45</strong> soal</div>
+        <div class="chip">🌐 Multiplayer Real-time</div>
+      </div>
+      <div class="errmsg" id="errCreate"></div>
+      <button class="bfire" id="btnCreate" onclick="createRoom()">✨ Buat Room</button>
+    </div>
+
+    <!-- JOIN panel -->
+    <div id="panelJoin" class="rsec" style="margin-top:.7rem;display:none;">
+      <input class="txt code" id="codeInput" placeholder="KODE ROOM" maxlength="4" oninput="this.value=this.value.toUpperCase()">
+      <div class="errmsg" id="errJoin"></div>
+      <button class="bfire" id="btnJoin" onclick="joinRoom()">🔗 Gabung Room</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ LOBBY ═══ -->
+<div id="lobbyScreen" class="screen">
+  <span class="logoico" style="font-size:2rem;">🏰</span>
+  <div class="logotitle" style="font-size:1.75rem;">Ruang Tunggu</div>
+  <div class="lby-code-box card" style="padding:.65rem 1rem;max-width:440px;width:100%;">
+    <div class="lby-codelbl">Kode Room — bagikan ke teman</div>
+    <div class="lby-codeval" id="lobbyCode">----</div>
+    <button class="copylnk" onclick="copyCode()">📋 Salin kode</button>
+  </div>
+  <div class="card" style="max-width:440px;width:100%;">
+    <div class="lbl">👥 Pemain <span id="pCount">(0)</span></div>
+    <div class="plr-list" id="playersList"></div>
+  </div>
+  <div class="lobbyst" id="lobbySt">Menunggu pemain<span class="dots"></span></div>
+  <button class="bfire" id="btnStartGame" onclick="hostStart()" style="display:none;max-width:440px;width:100%;">🔥 Mulai Game!</button>
+  <button class="bghost" onclick="leaveRoom()" style="max-width:440px;width:100%;">← Keluar Room</button>
+</div>
+
+<!-- ═══ COUNTDOWN ═══ -->
+<div id="countScreen" class="screen">
+  <div class="cntn" id="cntN">3</div>
+  <div class="cntlbl">Siapkan Dirimu!</div>
+</div>
+
+<!-- ═══ GAME ═══ -->
+<div id="gameScreen" class="screen">
+  <div class="hud">
+    <div class="hud-av" id="hudAv"></div>
+    <div class="hud-inf">
+      <div class="hud-nm" id="hudNm">Pemain</div>
+      <div class="hud-pt">⚡ <span id="hudPt">0</span> poin</div>
+    </div>
+    <div class="hud-mid" id="hudMid">Easy<br><span class="hud-qn">1/15</span></div>
+  </div>
+  <div class="gbody">
+    <!-- Tower panel with canvas -->
+    <div class="twrpanel" id="twrPanel">
+      <canvas id="twrCanvas"></canvas>
+    </div>
+    <!-- Questions -->
+    <div class="qpanel">
+      <div class="lvlbadge" id="lvlBadge">🟢 Easy</div>
+      <div class="speedtip">⚡ <strong>Lebih cepat = poin lebih tinggi.</strong><br>Tidak ada batas waktu — tapi lava naik tiap soal!</div>
+      <div class="qtxt" id="qText">Memuat soal...</div>
+      <div class="ogrid" id="optsGrid"></div>
+      <div class="fb" id="feedback"></div>
+      <button class="bnext" id="btnNext" onclick="nextQ()">Soal Berikutnya →</button>
+    </div>
+    <!-- Live LB (multi) -->
+    <div class="lbstrip" id="lbStrip">
+      <div class="lbttl">🏆 Live</div>
+      <div class="lbscrl" id="lbScrl"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ RESULT ═══ -->
+<div id="resultScreen" class="screen">
+  <div class="res-ico" id="resIco">🏆</div>
+  <div class="res-title" id="resTitle">Selesai!</div>
+  <div class="res-sub" id="resSub"></div>
+  <div class="sbig" id="resFinal">0</div>
+  <div class="slbl">Total Poin</div>
+  <div class="pctbar"><div class="pctfill" id="pctFill" style="width:0%"></div></div>
+  <div class="srow">
+    <div class="sbox"><div class="sv" id="stOk" style="color:var(--green)">0</div><div class="sl">✅ Benar</div></div>
+    <div class="sbox"><div class="sv" id="stNo" style="color:var(--red)">0</div><div class="sl">❌ Salah</div></div>
+    <div class="sbox"><div class="sv" id="stAvg" style="color:#fbbf24">-</div><div class="sl">⚡ Rata-rata</div></div>
+  </div>
+  <div class="flb" id="finalLb" style="display:none;"></div>
+  <div class="revwrap">
+    <div class="revhd">📋 Review Jawaban</div>
+    <div class="revlist" id="revList"></div>
+  </div>
+  <div class="btnrow">
+    <button class="bre" onclick="goIntro()">🔄 Main Lagi</button>
+  </div>
+  <div style="height:1rem;flex-shrink:0;"></div>
+</div>
+
+<div class="toast" id="toast"><div class="tem" id="tEm"></div><div class="ttx" id="tTx"></div></div>
+
+<!-- ═══════════════════════════ SCRIPTS ═══════════════════════════ -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, get, update, onValue, remove, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+/* ══════════════════════════════════
+   CHARACTERS — SVG pixel art with legs
+   Each character is an SVG string.
+   The player stands on top of the tower.
+══════════════════════════════════ */
+const CHARS = [
+  // 0 — Wizard
+  { label:'🧙 Penyihir', svg:`<svg viewBox="0 0 32 48" xmlns="http://www.w3.org/2000/svg">
+    <!-- hat --><polygon points="16,1 10,16 22,16" fill="#5533AA"/>
+    <rect x="8" y="14" width="16" height="3" rx="1" fill="#7755CC"/>
+    <!-- robe --><rect x="9" y="17" width="14" height="16" rx="3" fill="#5533AA"/>
+    <!-- head --><ellipse cx="16" cy="14" rx="6" ry="6" fill="#FDDBB4"/>
+    <!-- eyes --><circle cx="13.5" cy="13" r="1.2" fill="#1a1a3a"/>
+    <circle cx="18.5" cy="13" r="1.2" fill="#1a1a3a"/>
+    <!-- beard --><path d="M12,17 Q16,21 20,17" stroke="#DDD" stroke-width="1.5" fill="none"/>
+    <!-- staff --><rect x="22" y="16" width="2" height="18" rx="1" fill="#8B6020"/>
+    <circle cx="23" cy="14" r="3" fill="#FFD700" opacity=".9"/>
+    <!-- legs --><rect x="11" y="32" width="4" height="10" rx="2" fill="#3d2288"/>
+    <rect x="17" y="32" width="4" height="10" rx="2" fill="#3d2288"/>
+    <!-- feet --><ellipse cx="13" cy="42" rx="3" ry="2" fill="#2a1a66"/>
+    <ellipse cx="19" cy="42" rx="3" ry="2" fill="#2a1a66"/>
+  </svg>` },
+
+  // 1 — Knight
+  { label:'⚔️ Ksatria', svg:`<svg viewBox="0 0 32 48" xmlns="http://www.w3.org/2000/svg">
+    <!-- helmet --><ellipse cx="16" cy="10" rx="8" ry="9" fill="#888"/>
+    <rect x="8" y="10" width="16" height="5" rx="1" fill="#666"/>
+    <rect x="12" y="10" width="8" height="4" rx="1" fill="#AAA"/>
+    <!-- visor slit --><rect x="13" y="11" width="6" height="1.5" rx=".5" fill="#333"/>
+    <!-- armor --><rect x="8" y="18" width="16" height="16" rx="2" fill="#888"/>
+    <rect x="10" y="20" width="12" height="12" rx="1" fill="#999"/>
+    <!-- cross on chest --><rect x="15" y="21" width="2" height="10" fill="#666"/>
+    <rect x="11" y="25" width="10" height="2" fill="#666"/>
+    <!-- sword --><rect x="24" y="12" width="2" height="16" rx="1" fill="#BBB"/>
+    <rect x="22" y="18" width="6" height="2" rx="1" fill="#8B6020"/>
+    <rect x="24" y="10" width="2" height="4" rx="1" fill="#FFD700"/>
+    <!-- legs --><rect x="10" y="33" width="5" height="10" rx="2" fill="#777"/>
+    <rect x="17" y="33" width="5" height="10" rx="2" fill="#777"/>
+    <!-- feet --><ellipse cx="12.5" cy="43" rx="3.5" ry="2" fill="#555"/>
+    <ellipse cx="19.5" cy="43" rx="3.5" ry="2" fill="#555"/>
+  </svg>` },
+
+  // 2 — Princess
+  { label:'👸 Putri', svg:`<svg viewBox="0 0 32 48" xmlns="http://www.w3.org/2000/svg">
+    <!-- crown --><polygon points="16,1 12,7 16,5 20,7" fill="#FFD700"/>
+    <rect x="10" y="6" width="12" height="3" rx="1" fill="#FFD700"/>
+    <!-- hair --><ellipse cx="16" cy="12" rx="7" ry="8" fill="#D4A050"/>
+    <rect x="9" y="14" width="3" height="10" rx="2" fill="#D4A050"/>
+    <rect x="20" y="14" width="3" height="10" rx="2" fill="#D4A050"/>
+    <!-- head --><ellipse cx="16" cy="13" rx="6" ry="6" fill="#FDDBB4"/>
+    <!-- eyes --><circle cx="13.5" cy="12" r="1.3" fill="#5533AA"/>
+    <circle cx="18.5" cy="12" r="1.3" fill="#5533AA"/>
+    <!-- blush --><ellipse cx="11.5" cy="14.5" rx="2" ry="1.2" fill="rgba(255,120,120,.5)"/>
+    <ellipse cx="20.5" cy="14.5" rx="2" ry="1.2" fill="rgba(255,120,120,.5)"/>
+    <!-- smile --><path d="M13.5,16 Q16,18 18.5,16" stroke="#c0306a" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+    <!-- dress --><path d="M9,19 L23,19 L26,35 L6,35 Z" fill="#E060A0"/>
+    <rect x="10" y="19" width="12" height="6" rx="2" fill="#FF80C0"/>
+    <!-- lace --><path d="M6,35 Q16,38 26,35" stroke="#FFB0D8" stroke-width="1.5" fill="none"/>
+    <!-- legs --><rect x="12" y="35" width="3.5" height="9" rx="1.5" fill="#E060A0"/>
+    <rect x="16.5" y="35" width="3.5" height="9" rx="1.5" fill="#E060A0"/>
+    <!-- feet --><ellipse cx="13.75" cy="44" rx="3" ry="1.8" fill="#CC3080"/>
+    <ellipse cx="18.25" cy="44" rx="3" ry="1.8" fill="#CC3080"/>
+  </svg>` },
+
+  // 3 — Robot
+  { label:'🤖 Robot', svg:`<svg viewBox="0 0 32 48" xmlns="http://www.w3.org/2000/svg">
+    <!-- antenna --><rect x="15" y="1" width="2" height="5" fill="#888"/>
+    <circle cx="16" cy="1" r="2" fill="#3BAFDA"/>
+    <!-- head --><rect x="8" y="5" width="16" height="13" rx="3" fill="#AAA"/>
+    <rect x="10" y="7" width="12" height="9" rx="2" fill="#888"/>
+    <!-- eyes --><rect x="11" y="9" width="4" height="3" rx="1" fill="#3BAFDA"/>
+    <rect x="17" y="9" width="4" height="3" rx="1" fill="#3BAFDA"/>
+    <circle cx="13" cy="10.5" r="1" fill="#fff"/>
+    <circle cx="19" cy="10.5" r="1" fill="#fff"/>
+    <!-- mouth --><rect x="12" y="14" width="8" height="2" rx="1" fill="#555"/>
+    <rect x="13" y="14.5" width="2" height="1" fill="#3BAFDA"/>
+    <rect x="17" y="14.5" width="2" height="1" fill="#3BAFDA"/>
+    <!-- body --><rect x="8" y="18" width="16" height="14" rx="2" fill="#999"/>
+    <rect x="10" y="20" width="5" height="5" rx="1" fill="#3BAFDA" opacity=".7"/>
+    <circle cx="20" cy="22.5" r="2" fill="#FF4444"/>
+    <circle cx="20" cy="28" r="2" fill="#44FF44"/>
+    <!-- arms --><rect x="2" y="19" width="6" height="3" rx="1.5" fill="#AAA"/>
+    <rect x="24" y="19" width="6" height="3" rx="1.5" fill="#AAA"/>
+    <!-- legs --><rect x="10" y="32" width="5" height="11" rx="2" fill="#888"/>
+    <rect x="17" y="32" width="5" height="11" rx="2" fill="#888"/>
+    <!-- feet --><rect x="9" y="41" width="7" height="3" rx="1.5" fill="#666"/>
+    <rect x="16" y="41" width="7" height="3" rx="1.5" fill="#666"/>
+  </svg>` },
+
+  // 4 — Ninja
+  { label:'🥷 Ninja', svg:`<svg viewBox="0 0 32 48" xmlns="http://www.w3.org/2000/svg">
+    <!-- head wrap --><ellipse cx="16" cy="12" rx="7" ry="7" fill="#222"/>
+    <!-- eyes only --><rect x="12" y="11" width="8" height="3" rx="1" fill="#111"/>
+    <ellipse cx="14" cy="12.5" rx="1.5" ry="1" fill="#E0A020"/>
+    <ellipse cx="18" cy="12.5" rx="1.5" ry="1" fill="#E0A020"/>
+    <!-- mask line --><rect x="9" y="14" width="14" height="2" rx="1" fill="#111"/>
+    <!-- body --><rect x="9" y="18" width="14" height="15" rx="2" fill="#222"/>
+    <!-- belt --><rect x="9" y="26" width="14" height="3" fill="#C0A000"/>
+    <!-- shuriken --><polygon points="24,18 26,22 28,18 24,22 28,22" fill="#BBB"/>
+    <!-- legs --><rect x="10" y="33" width="4.5" height="11" rx="2" fill="#1a1a1a"/>
+    <rect x="17.5" y="33" width="4.5" height="11" rx="2" fill="#1a1a1a"/>
+    <!-- feet --><ellipse cx="12.25" cy="44" rx="3.5" ry="2" fill="#111"/>
+    <ellipse cx="19.75" cy="44" rx="3.5" ry="2" fill="#111"/>
+  </svg>` },
+
+  // 5 — Explorer
+  { label:'🧭 Petualang', svg:`<svg viewBox="0 0 32 48" xmlns="http://www.w3.org/2000/svg">
+    <!-- hat --><ellipse cx="16" cy="8" rx="10" ry="3" fill="#8B6020"/>
+    <rect x="9" y="5" width="14" height="6" rx="2" fill="#A07030"/>
+    <!-- head --><ellipse cx="16" cy="14" rx="6" ry="6" fill="#E8B080"/>
+    <circle cx="13.5" cy="13" r="1.2" fill="#3a2000"/>
+    <circle cx="18.5" cy="13" r="1.2" fill="#3a2000"/>
+    <path d="M13.5,16 Q16,18.5 18.5,16" stroke="#a04040" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+    <!-- shirt --><rect x="9" y="19" width="14" height="13" rx="2" fill="#C85020"/>
+    <!-- pocket --><rect x="10" y="22" width="5" height="4" rx="1" fill="#A04010"/>
+    <!-- backpack --><rect x="21" y="19" width="5" height="10" rx="2" fill="#8B6020"/>
+    <rect x="22" y="21" width="3" height="2" rx="1" fill="#C8A040"/>
+    <!-- legs --><rect x="10" y="31" width="5" height="11" rx="2" fill="#4a5020"/>
+    <rect x="17" y="31" width="5" height="11" rx="2" fill="#4a5020"/>
+    <!-- boots --><rect x="9" y="40" width="7" height="4" rx="1.5" fill="#3a2800"/>
+    <rect x="16" y="40" width="7" height="4" rx="1.5" fill="#3a2800"/>
+  </svg>` },
+
+  // 6 — Fox
+  { label:'🦊 Rubah', svg:`<svg viewBox="0 0 32 48" xmlns="http://www.w3.org/2000/svg">
+    <!-- ears --><polygon points="8,4 11,12 4,10" fill="#E06000"/>
+    <polygon points="24,4 21,12 28,10" fill="#E06000"/>
+    <polygon points="8.5,5.5 10.5,10.5 5.5,9" fill="#FFB060"/>
+    <polygon points="23.5,5.5 21.5,10.5 26.5,9" fill="#FFB060"/>
+    <!-- head --><ellipse cx="16" cy="14" rx="7.5" ry="7" fill="#E06000"/>
+    <ellipse cx="16" cy="16" rx="4" ry="3" fill="#FFE0A0"/>
+    <ellipse cx="12.5" cy="12.5" rx="2" ry="2.5" fill="#E06000"/>
+    <ellipse cx="19.5" cy="12.5" rx="2" ry="2.5" fill="#E06000"/>
+    <ellipse cx="12.5" cy="12.5" rx="1.2" ry="1.6" fill="#1a1a1a"/>
+    <ellipse cx="19.5" cy="12.5" rx="1.2" ry="1.6" fill="#1a1a1a"/>
+    <ellipse cx="16" cy="17" rx="1.5" ry="1" fill="#222"/>
+    <!-- body --><rect x="9" y="20" width="14" height="13" rx="3" fill="#E06000"/>
+    <ellipse cx="16" cy="26" rx="5" ry="4" fill="#FFE0A0"/>
+    <!-- tail --><path d="M23,28 Q32,24 30,33 Q28,38 22,35" fill="#E06000" stroke="none"/>
+    <ellipse cx="26" cy="34" rx="3" ry="2.5" fill="#FFE0A0"/>
+    <!-- legs --><rect x="10" y="32" width="4.5" height="11" rx="2" fill="#C04000"/>
+    <rect x="17.5" y="32" width="4.5" height="11" rx="2" fill="#C04000"/>
+    <!-- paws --><ellipse cx="12.25" cy="43" rx="3.5" ry="2" fill="#A03000"/>
+    <ellipse cx="19.75" cy="43" rx="3.5" ry="2" fill="#A03000"/>
+  </svg>` },
+
+  // 7 — Astronaut
+  { label:'👨‍🚀 Astronot', svg:`<svg viewBox="0 0 32 48" xmlns="http://www.w3.org/2000/svg">
+    <!-- helmet --><ellipse cx="16" cy="12" rx="9" ry="9" fill="#DDD"/>
+    <ellipse cx="16" cy="12" rx="7" ry="7" fill="#88BBFF"/>
+    <ellipse cx="13" cy="10" rx="2.5" ry="2" fill="rgba(255,255,255,.4)"/>
+    <!-- suit ring --><ellipse cx="16" cy="20" rx="8" ry="3" fill="#CCC"/>
+    <!-- suit body --><rect x="8" y="20" width="16" height="13" rx="3" fill="#EEE"/>
+    <rect x="11" y="23" width="10" height="7" rx="2" fill="#99AACC"/>
+    <!-- oxygen --><rect x="20" y="21" width="4" height="9" rx="2" fill="#CCC"/>
+    <rect x="21" y="22" width="2" height="2" rx="1" fill="#3BAFDA"/>
+    <!-- legs --><rect x="10" y="33" width="5" height="11" rx="2" fill="#CCC"/>
+    <rect x="17" y="33" width="5" height="11" rx="2" fill="#CCC"/>
+    <!-- boots --><rect x="9" y="41" width="7" height="4" rx="2" fill="#888"/>
+    <rect x="16" y="41" width="7" height="4" rx="2" fill="#888"/>
+  </svg>` },
+
+  // 8 — Dragon
+  { label:'🐲 Naga', svg:`<svg viewBox="0 0 32 48" xmlns="http://www.w3.org/2000/svg">
+    <!-- horns --><polygon points="11,2 9,9 13,8" fill="#CC4400"/>
+    <polygon points="21,2 23,9 19,8" fill="#CC4400"/>
+    <!-- head --><ellipse cx="16" cy="12" rx="8" ry="7" fill="#44AA44"/>
+    <ellipse cx="16" cy="14" rx="5" ry="3.5" fill="#88DD88"/>
+    <!-- eyes --><ellipse cx="12" cy="10" rx="2.5" ry="2.5" fill="#FFD700"/>
+    <ellipse cx="20" cy="10" rx="2.5" ry="2.5" fill="#FFD700"/>
+    <ellipse cx="12" cy="10" rx="1.2" ry="1.8" fill="#1a1a1a"/>
+    <ellipse cx="20" cy="10" rx="1.2" ry="1.8" fill="#1a1a1a"/>
+    <!-- nostrils / flame --><circle cx="14.5" cy="15.5" r="1" fill="#338833"/>
+    <circle cx="17.5" cy="15.5" r="1" fill="#338833"/>
+    <path d="M14,16 Q16,20 18,16" stroke="#FF8800" stroke-width="1.5" fill="none"/>
+    <!-- body --><rect x="8" y="18" width="16" height="13" rx="3" fill="#44AA44"/>
+    <ellipse cx="16" cy="24" rx="6" ry="5" fill="#88DD88"/>
+    <!-- wings --><path d="M8,20 Q0,14 2,24 Q4,28 8,26" fill="#66BB66"/>
+    <path d="M24,20 Q32,14 30,24 Q28,28 24,26" fill="#66BB66"/>
+    <!-- legs --><rect x="10" y="30" width="5" height="12" rx="2" fill="#338833"/>
+    <rect x="17" y="30" width="5" height="12" rx="2" fill="#338833"/>
+    <!-- claws --><path d="M10,42 L8,45 M12.5,42 L12.5,45 M15,42 L17,45" stroke="#226622" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M17,42 L15,45 M19.5,42 L19.5,45 M22,42 L24,45" stroke="#226622" stroke-width="1.5" stroke-linecap="round"/>
+  </svg>` },
+
+  // 9 — Witch
+  { label:'🧙‍♀️ Penyihir ♀', svg:`<svg viewBox="0 0 32 48" xmlns="http://www.w3.org/2000/svg">
+    <!-- hat --><polygon points="16,0 10,15 22,15" fill="#1a1a2e"/>
+    <rect x="7" y="13" width="18" height="4" rx="1" fill="#2d2d44"/>
+    <!-- hair --><rect x="8" y="14" width="4" height="12" rx="2" fill="#1a1a1a"/>
+    <rect x="20" y="14" width="4" height="12" rx="2" fill="#1a1a1a"/>
+    <ellipse cx="16" cy="14" rx="7" ry="7" fill="#1a1a1a"/>
+    <!-- head --><ellipse cx="16" cy="14" rx="6" ry="6" fill="#FDDBB4"/>
+    <circle cx="13.5" cy="13" r="1.2" fill="#5533AA"/>
+    <circle cx="18.5" cy="13" r="1.2" fill="#5533AA"/>
+    <path d="M13.5,16.5 Q16,18.5 18.5,16.5" stroke="#c0306a" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+    <!-- mole --><circle cx="18" cy="17" r=".8" fill="#553300"/>
+    <!-- dress --><path d="M9,19 L23,19 L25,34 L7,34 Z" fill="#5533AA"/>
+    <rect x="10" y="19" width="12" height="7" rx="2" fill="#6644BB"/>
+    <!-- broomstick --><rect x="23" y="18" width="2" height="18" rx="1" fill="#8B6020" transform="rotate(15,24,27)"/>
+    <ellipse cx="26" cy="34" rx="4" ry="2" fill="#8B6020" transform="rotate(15,24,27)"/>
+    <!-- legs --><rect x="11" y="34" width="4" height="10" rx="2" fill="#3d2288"/>
+    <rect x="17" y="34" width="4" height="10" rx="2" fill="#3d2288"/>
+    <ellipse cx="13" cy="44" rx="3" ry="2" fill="#2a1a66"/>
+    <ellipse cx="19" cy="44" rx="3" ry="2" fill="#2a1a66"/>
+  </svg>` },
+];
+
+/* ══════════════════════════════════════
+   QUESTIONS — 15 per level
+══════════════════════════════════════ */
+const Q = {
+  1:[
+    {q:'1.245 + 538 = …',    o:['1.773','1.783','1.793','1.873'],     a:1},
+    {q:'3.720 − 864 = …',    o:['2.756','2.856','2.956','3.056'],     a:1},
+    {q:'48 × 125 = …',       o:['5.980','5.990','6.000','6.010'],     a:2},
+    {q:'7.488 ÷ 8 = …',      o:['916','926','936','946'],             a:2},
+    {q:'2.650 + 1.475 = …',  o:['4.025','4.115','4.125','4.225'],     a:2},
+    {q:'5.300 − 1.847 = …',  o:['3.343','3.353','3.443','3.453'],     a:3},
+    {q:'36 × 250 = …',       o:['8.980','9.000','9.120','9.200'],     a:1},
+    {q:'9.360 ÷ 12 = …',     o:['760','770','780','790'],             a:2},
+    {q:'4.825 + 2.398 = …',  o:['7.113','7.123','7.213','7.223'],     a:3},
+    {q:'6.000 − 2.347 = …',  o:['3.553','3.643','3.653','3.753'],     a:2},
+    {q:'75 × 480 = …',       o:['35.990','36.000','36.110','36.120'], a:1},
+    {q:'8.640 ÷ 24 = …',     o:['340','350','360','370'],             a:2},
+    {q:'3.456 + 4.789 = …',  o:['8.135','8.145','8.235','8.245'],     a:3},
+    {q:'9.100 − 3.675 = …',  o:['5.325','5.335','5.415','5.425'],     a:3},
+    {q:'124 × 75 = …',       o:['9.290','9.300','9.310','9.320'],     a:1},
+  ],
+  2:[
+    {q:'56 × 8 − 78 = …',    o:['370','390','360','270'],   a:0},
+    {q:'(45 − 9) × 7 = …',   o:['232','252','272','292'],   a:1},
+    {q:'240 − 9 × 18 = …',   o:['78','98','68','88'],       a:0},
+    {q:'(72 − 8) × 5 = …',   o:['280','300','320','340'],   a:2},
+    {q:'38 × 9 − 56 = …',    o:['266','256','286','276'],   a:2},
+    {q:'(80 − 14) × 6 = …',  o:['336','356','376','396'],   a:3},
+    {q:'63 × 7 − 95 = …',    o:['346','356','366','376'],   a:0},
+    {q:'500 − 6 × 45 = …',   o:['190','210','230','250'],   a:2},
+    {q:'(93 − 17) × 4 = …',  o:['294','304','314','324'],   a:0},
+    {q:'47 × 8 − 112 = …',   o:['204','224','244','264'],   a:3},
+    {q:'(65 − 11) × 7 = …',  o:['278','358','378','388'],   a:2},
+    {q:'85 × 6 − 96 = …',    o:['414','434','454','474'],   a:0},
+    {q:'78 − 22 × 9 = …',    o:['110','−110','−120','120'], a:3},
+    {q:'32 × 7 − 48 = …',    o:['156','176','196','216'],   a:1},
+    {q:'400 − 5 × 54 = …',   o:['110','130','120','140'],   a:1},
+  ],
+  3:[
+    {q:'1,5 × 240 + 3 × 80 = …',   o:['360','540','570','600'], a:3},
+    {q:'0,25 × 400 + 12 × 15 = …', o:['100','280','250','260'], a:1},
+    {q:'3/4 × 360 + 5 × 27 = …',   o:['405','270','375','420'], a:0},
+    {q:'2,5 × 80 + 6 × 45 = …',    o:['200','440','470','450'], a:2},
+    {q:'1/3 × 270 + 8 × 35 = …',   o:['90','350','390','370'],  a:3},
+    {q:'4 × 125 + 0,5 × 360 = …',  o:['680','500','650','710'], a:0},
+    {q:'1,5 × 160 + 9 × 20 = …',   o:['240','390','420','450'], a:2},
+    {q:'0,75 × 480 + 7 × 30 = …',  o:['360','570','540','600'], a:1},
+    {q:'2/5 × 350 + 4 × 65 = …',   o:['140','370','420','400'], a:3},
+    {q:'3 × 180 + 1,25 × 240 = …', o:['740','840','940','810'], a:1},
+    {q:'1/4 × 480 + 6 × 55 = …',   o:['430','440','450','460'], a:2},
+    {q:'0,5 × 560 + 7 × 40 = …',   o:['280','520','600','560'], a:3},
+    {q:'2,5 × 120 + 5 × 54 = …',   o:['300','540','570','600'], a:2},
+    {q:'3/5 × 450 + 9 × 25 = …',   o:['495','270','465','520'], a:0},
+    {q:'1,5 × 320 + 4 × 75 = …',   o:['480','740','780','810'], a:2},
+  ]
+};
+
+const LVL_N={1:'🟢 Easy',2:'🟡 Medium',3:'🔴 Hard'};
+const LVL_C={1:'lv1',2:'lv2',3:'lv3'};
+
+/* point table — based on speed only, no time limit */
+function calcPts(level, elapsed) {
+  const tbl = {
+    1:[120,100,80,65,50,35,20,10],
+    2:[180,150,120,100,75,55,35,15],
+    3:[250,200,160,130,100,75,50,25],
+  };
+  const br = [5,10,15,20,30,45,60];
+  const pts = tbl[level];
+  for (let i=0; i<br.length; i++) if (elapsed < br[i]) return pts[i];
+  return pts[pts.length-1];
+}
+
+/* ══ TOWER CANVAS RENDERER ══════════════
+   The tower panel is a single <canvas>.
+   We redraw it on every addBlock() and raiseLava() call.
+
+   Visual layout (y=0 is TOP of canvas):
+   ┌──────────────────────┐  ← top (sky)
+   │   stars / darkness   │
+   │   [character SVG]    │  ← rendered as img, positioned above top block
+   │   ████████████████   │  ← block N   (top)
+   │   ████████████████   │  ← block N-1
+   │   ...                │
+   │   ████████████████   │  ← block 0   (bottom)
+   │░░░░░░░░░░░░░░░░░░░░░│  ← lava surface glow
+   │▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓│  ← lava body
+   └──────────────────────┘  ← bottom
+
+   blockCount: how many blocks have been stacked
+   lavaBlocks: how high lava is (in block-height units, but can be fractional)
+                updated only when a question is answered
+══════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════
+   TOWER VISUAL  —  single canvas, drawn bottom-to-top
+
+   CONCEPT (y=0 is TOP of canvas, y=H is BOTTOM):
+
+   ┌─────────────┐  y=0       ← canvas top (sky)
+   │  dark sky   │
+   │  [char SVG] │            ← character, feet ON top of tower
+   │  ██████████ │  ← block N (newest, highest)
+   │  ██████████ │  ← block N-1
+   │  ...        │
+   │  ██████████ │  ← block 0 (oldest, at bottom)
+   │░░░░░░░░░░░░ │            ← lava SURFACE (thin strip, glowing)
+   │▓▓▓▓▓▓▓▓▓▓▓ │            ← lava BODY (below surface, dark red)
+   └─────────────┘  y=H       ← canvas bottom
+
+   KEY RULES:
+   - Blocks are drawn FROM canvas bottom upward. Each block is BLOCK_H px.
+   - Lava is drawn BEHIND blocks (lava < tower bottom = invisible, lava
+     rises per question but is always BELOW the visible tower top unless
+     tower stopped growing).
+   - Character is drawn LAST so it appears in front of everything.
+   - Lava is drawn FIRST so blocks paint over it — lava only shows in the
+     region NOT covered by blocks.
+   - Camera scroll: once tower height > 60% of canvas, we shift the
+     viewport so the character (tower top) stays near the upper 40% of
+     the panel, letting you see both the tall tower AND the lava below.
+════════════════════════════════════════════════════════ */
+
+const BLOCK_H = 18;   // px per block (visible height)
+const CHAR_H  = 52;   // px for character SVG
+const LAVA_SURFACE_H = 12; // px for the bright lava surface strip
+const MAX_VISIBLE_BLOCKS = 999; // unlimited
+
+// Block face colours indexed by block number (bottom=dark stone, top=gold)
+const BLK_FACE = [
+  ['#6B3A1A','#9B5825','#4a2000'],
+  ['#7a4820','#AF6A30','#5a3010'],
+  ['#8B5820','#C07838','#6a3e18'],
+  ['#9B6828','#D08840','#7a4e20'],
+  ['#AA7830','#DF9848','#8a5e28'],
+  ['#B98830','#EBA848','#9a6e28'],
+  ['#C89830','#F5B840','#aa7e28'],
+  ['#D4A830','#FAC838','#b48e28'],
+  ['#DCB828','#FDD830','#ba9a20'],
+  ['#E4C820','#FDE820','#c0a818'],
+  ['#ECD810','#FDF010','#c8b810'],
+  ['#F4E800','#FFF820','#d0c808'],
+  ['#FAF000','#FFFB40','#d8d010'],
+  ['#FFEE00','#FFFB70','#e0d820'],
+  ['#FFD700','#FFFFA0','#e8e040'],
+];
+
+let charImg = new Image();
+let charImgReady = false;
+
+function loadCharSvg(charIdx) {
+  charImgReady = false;
+  const svg  = CHARS[charIdx].svg;
+  const blob = new Blob([svg], {type:'image/svg+xml'});
+  const url  = URL.createObjectURL(blob);
+  charImg = new Image();
+  charImg.onload = () => {
+    charImgReady = true;
+    URL.revokeObjectURL(url);
+    drawTower();
+  };
+  charImg.src = url;
+}
+
+function drawTower() {
+  const panel  = document.getElementById('twrPanel');
+  const canvas = document.getElementById('twrCanvas');
+  const W = panel.clientWidth  || 88;
+  const H = panel.clientHeight || 420;
+  if (canvas.width !== W || canvas.height !== H) {
+    canvas.width  = W;
+    canvas.height = H;
+  }
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+
+  // ── CAMERA OFFSET ──────────────────────────────────────────
+  // towerH = total height of all stacked blocks in px
+  const towerH = blockCount * BLOCK_H;
+  // lavaTopY_world = y from canvas bottom where lava surface sits
+  // (0 = at very bottom, positive = rising)
+  const lavaWorld = lavaH; // lavaH in px from bottom of world
+
+  // We "scroll" so that the top of the tower is always
+  // at a comfortable position (30% from top of canvas).
+  // scrollY = how many px we shift upward (positive = scroll up).
+  const targetTopFromTop = H * 0.30; // where we want the tower top to appear
+  const towerTopFromBottom = towerH; // tower top in world coords from bottom
+  // In canvas coords: towerTop_canvas = H - towerTopFromBottom - scrollY
+  // We want: H - towerTopFromBottom - scrollY = targetTopFromTop
+  // → scrollY = H - towerTopFromBottom - targetTopFromTop
+  let scrollY = H - towerH - targetTopFromTop;
+  // Don't scroll if tower is short — keep bottom anchored
+  if (scrollY > 0) scrollY = 0;
+
+  // helper: world y-from-bottom → canvas y
+  const toCanvas = (worldFromBottom) => H - worldFromBottom - scrollY;
+
+  // ── SKY ────────────────────────────────────────────────────
+  const skyG = ctx.createLinearGradient(0, 0, 0, H);
+  skyG.addColorStop(0,   '#020110');
+  skyG.addColorStop(0.7, '#06021a');
+  skyG.addColorStop(1,   '#0a0420');
+  ctx.fillStyle = skyG;
+  ctx.fillRect(0, 0, W, H);
+
+  // ── LAVA — drawn FIRST so tower blocks paint over it ───────
+  const lavaTopCanvas = toCanvas(lavaWorld);
+  const lavaBottomCanvas = toCanvas(0);
+
+  if (lavaWorld > 0 && lavaTopCanvas < lavaBottomCanvas) {
+    // lava body (dark red fill)
+    const lBodyG = ctx.createLinearGradient(0, lavaTopCanvas, 0, lavaBottomCanvas);
+    lBodyG.addColorStop(0,   '#CC2200');
+    lBodyG.addColorStop(0.4, '#AA1100');
+    lBodyG.addColorStop(1,   '#660800');
+    ctx.fillStyle = lBodyG;
+    ctx.fillRect(0, lavaTopCanvas, W, lavaBottomCanvas - lavaTopCanvas);
+
+    // lava surface strip (bright orange)
+    const t = Date.now() / 500;
+    const surfY = lavaTopCanvas;
+    const surfG = ctx.createLinearGradient(0, surfY - 4, 0, surfY + LAVA_SURFACE_H);
+    surfG.addColorStop(0,   'rgba(255,100,0,0)');
+    surfG.addColorStop(0.3, 'rgba(255,160,0,.6)');
+    surfG.addColorStop(1,   '#FF4400');
+    ctx.fillStyle = surfG;
+    ctx.fillRect(0, surfY - 4, W, LAVA_SURFACE_H + 4);
+
+    // ripple line on lava surface
+    ctx.strokeStyle = 'rgba(255,220,80,.7)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let x = 0; x <= W; x += 3) {
+      const ry = surfY + Math.sin(x / 7 + t) * 2;
+      x === 0 ? ctx.moveTo(x, ry) : ctx.lineTo(x, ry);
+    }
+    ctx.stroke();
+
+    // glow above lava
+    const glowG = ctx.createLinearGradient(0, surfY - 24, 0, surfY);
+    glowG.addColorStop(0, 'rgba(255,80,0,0)');
+    glowG.addColorStop(1, 'rgba(255,120,0,.25)');
+    ctx.fillStyle = glowG;
+    ctx.fillRect(0, surfY - 24, W, 24);
+  }
+
+  // ── TOWER BLOCKS — stacked from bottom up ──────────────────
+  // block 0 sits at world y 0→BLOCK_H, block 1 at BLOCK_H→2*BLOCK_H, etc.
+  for (let i = 0; i < blockCount; i++) {
+    const worldBot = i * BLOCK_H;
+    const worldTop = worldBot + BLOCK_H;
+    const yTop    = toCanvas(worldTop);   // canvas y of block top edge
+    const yBot    = toCanvas(worldBot);   // canvas y of block bottom edge
+    const bH      = yBot - yTop;          // actual pixel height on canvas
+
+    // skip blocks that are completely off-screen
+    if (yTop > H || yBot < 0) continue;
+
+    const colIdx = Math.min(i, BLK_FACE.length - 1);
+    const [faceTop, faceHigh, faceShadow] = BLK_FACE[colIdx];
+
+    // face gradient (top highlight → mid colour → bottom shadow)
+    const bg = ctx.createLinearGradient(0, yTop, 0, yBot);
+    bg.addColorStop(0,    faceHigh);
+    bg.addColorStop(0.25, faceTop);
+    bg.addColorStop(0.75, faceTop);
+    bg.addColorStop(1,    faceShadow);
+    ctx.fillStyle = bg;
+    ctx.fillRect(3, yTop, W - 6, bH);
+
+    // top-edge bright highlight
+    ctx.fillStyle = 'rgba(255,255,255,.30)';
+    ctx.fillRect(3, yTop, W - 6, Math.min(3, bH * .2));
+
+    // bottom-edge dark mortar line
+    ctx.fillStyle = 'rgba(0,0,0,.55)';
+    ctx.fillRect(3, yBot - 2, W - 6, 2);
+
+    // left & right edge shadow for 3D feel
+    ctx.fillStyle = 'rgba(0,0,0,.22)';
+    ctx.fillRect(3, yTop, 4, bH);
+    ctx.fillStyle = 'rgba(0,0,0,.15)';
+    ctx.fillRect(W - 7, yTop, 4, bH);
+
+    // stone crack detail
+    if (i % 3 === 1 && bH > 6) {
+      ctx.strokeStyle = 'rgba(0,0,0,.18)';
+      ctx.lineWidth = 0.8;
+      ctx.beginPath();
+      ctx.moveTo(W * .28, yTop + bH * .25);
+      ctx.lineTo(W * .42, yTop + bH * .75);
+      ctx.stroke();
+    }
+    if (i % 4 === 2 && bH > 6) {
+      ctx.strokeStyle = 'rgba(0,0,0,.15)';
+      ctx.lineWidth = 0.8;
+      ctx.beginPath();
+      ctx.moveTo(W * .62, yTop + bH * .2);
+      ctx.lineTo(W * .72, yTop + bH * .8);
+      ctx.stroke();
+    }
+  }
+
+  // ── CHARACTER — drawn LAST (on top of everything) ──────────
+  // feet sit on the tower top surface
+  const towerTopCanvas = toCanvas(towerH); // canvas y of tower top
+  const charW  = Math.min(W - 8, 50);
+  const charX  = (W - charW) / 2;
+  const charTopY = towerTopCanvas - CHAR_H; // canvas y of character head
+
+  if (charImgReady && blockCount >= 0) {
+    // only clip to canvas bounds
+    const drawTop = Math.max(charTopY, 2);
+    const drawH   = charTopY + CHAR_H - drawTop;
+    if (drawH > 0) {
+      ctx.drawImage(charImg, charX, drawTop, charW, CHAR_H);
+    }
+  }
+
+  // ── DANGER VIGNETTE ────────────────────────────────────────
+  if (lavaWorld > 0) {
+    const gap = towerTopCanvas - lavaTopCanvas; // px between lava and character feet
+    if (gap < 60) {
+      const intensity = Math.min(0.35, (60 - gap) / 60 * 0.35);
+      const dGrad = ctx.createRadialGradient(W/2, H/2, H*.15, W/2, H/2, H*.6);
+      dGrad.addColorStop(0, `rgba(255,0,0,0)`);
+      dGrad.addColorStop(1, `rgba(255,0,0,${intensity})`);
+      ctx.fillStyle = dGrad;
+      ctx.fillRect(0, 0, W, H);
+    }
+  }
+
+  // ── LEVEL LABEL above character ────────────────────────────
+  if (blockCount > 0) {
+    const lblY = Math.max(charTopY - 4, 10);
+    ctx.font = 'bold 9px Nunito,sans-serif';
+    ctx.fillStyle = 'rgba(255,215,0,.9)';
+    ctx.textAlign = 'center';
+    ctx.fillText(`Lv.${blockCount}`, W / 2, lblY);
+  }
+}
+
+/* ripple animation loop — keeps running while game is on screen */
+let lavaAnimId = null;
+function startLavaAnim() {
+  if (lavaAnimId) return;
+  function frame() {
+    const gs = document.getElementById('gameScreen');
+    if (gs && gs.classList.contains('active') && lavaH > 0) {
+      drawTower();
+      lavaAnimId = requestAnimationFrame(frame);
+    } else {
+      lavaAnimId = null;
+    }
+  }
+  lavaAnimId = requestAnimationFrame(frame);
+}
+
+/* ══ STATE ══ */
+let myName='Pemain', myCharIdx=0, diffMode=0, isSolo=true;
+let myId=null, roomCode=null, isHost=false;
+let roomRef=null, playersRef=null;
+let qList=[], qIdx=0, myScore=0, qStart=0;
+let answered=false, myAnswers=[];
+let blockCount=0, lavaH=0;
+let unsubs=[];
+
+/* ══ FIREBASE ══ */
+const app = initializeApp(FIREBASE_CONFIG);
+const db  = getDatabase(app);
+function dbOff(){unsubs.forEach(u=>u());unsubs=[];}
+function dbOn(r,cb){const u=onValue(r,cb);unsubs.push(u);return u;}
+
+/* ══ INIT ══ */
+(()=>{
+  // stars
+  const s=document.getElementById('starsBg');
+  for(let i=0;i<55;i++){const d=document.createElement('div');d.className='star';const sz=1+Math.random()*2;d.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*70}%;animation-duration:${2+Math.random()*4}s;animation-delay:${Math.random()*4}s;`;s.appendChild(d);}
+  // embers
+  const cols=['#FFD700','#FF6600','#FF4500','#FFA500'];
+  for(let i=0;i<12;i++){const e=document.createElement('div');e.className='ember';e.style.cssText=`left:${Math.random()*100}%;bottom:0;width:${3+Math.random()*4}px;height:${3+Math.random()*4}px;background:${cols[Math.floor(Math.random()*cols.length)]};animation-duration:${3+Math.random()*5}s;animation-delay:${Math.random()*5}s;`;document.body.appendChild(e);}
+
+  // build avatar grid
+  const g = document.getElementById('avGrid');
+  CHARS.forEach((c,i)=>{
+    const btn = document.createElement('div');
+    btn.className = 'av-btn' + (i===0?' sel':'');
+    btn.title = c.label;
+    btn.innerHTML = c.svg;
+    btn.onclick = () => {
+      g.querySelectorAll('.av-btn').forEach(x=>x.classList.remove('sel'));
+      btn.classList.add('sel');
+      myCharIdx = i;
+      loadCharSvg(i);
+      setHudAv(i);
+    };
+    g.appendChild(btn);
+  });
+  loadCharSvg(0);
+
+  // diff buttons
+  document.getElementById('soloDiff').querySelectorAll('.db').forEach(b=>b.addEventListener('click',()=>{
+    document.getElementById('soloDiff').querySelectorAll('.db').forEach(x=>x.classList.remove('sel'));
+    b.classList.add('sel');diffMode=+b.dataset.d;
+    document.getElementById('chipS').textContent=diffMode===0?45:15;
+  }));
+  document.getElementById('multiDiff').querySelectorAll('.db').forEach(b=>b.addEventListener('click',()=>{
+    document.getElementById('multiDiff').querySelectorAll('.db').forEach(x=>x.classList.remove('sel'));
+    b.classList.add('sel');diffMode=+b.dataset.d;
+    document.getElementById('chipM').textContent=diffMode===0?45:15;
+  }));
+})();
+
+function setScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+
+/* mode tabs */
+window.selMode=(m)=>{
+  document.querySelectorAll('.mtab').forEach(t=>t.classList.remove('sel'));
+  document.getElementById('tab'+m.charAt(0).toUpperCase()+m.slice(1)).classList.add('sel');
+  ['Solo','Create','Join'].forEach(n=>document.getElementById('panel'+n).style.display=n.toLowerCase()===m?'flex':'none');
+};
+
+function setHudAv(idx){
+  const el=document.getElementById('hudAv');
+  el.innerHTML=CHARS[idx].svg;
+}
+
+/* ══ SOLO ══ */
+window.startSolo=()=>{
+  const n=document.getElementById('nameInput').value.trim();
+  if(!n){document.getElementById('errSolo').textContent='Masukkan nama kamu!';return;}
+  myName=n; isSolo=true;
+  qList=buildQList(Date.now());
+  qIdx=0;myScore=0;myAnswers=[];blockCount=0;lavaH=0;
+  doCountdown(()=>{
+    setScreen('gameScreen');
+    document.getElementById('lbStrip').classList.remove('on');
+    setHudAv(myCharIdx);
+    document.getElementById('hudNm').textContent=myName;
+    loadCharSvg(myCharIdx);
+    // wait a tick for canvas to have real dimensions
+    requestAnimationFrame(()=>{ drawTower(); loadQ(); });
+  });
+};
+
+/* ══ MULTIPLAYER ══ */
+function genCode(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<4;i++)s+=c[Math.floor(Math.random()*c.length)];return s;}
+function genPid(){return 'p_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);}
+function showErr(msg,id='errCreate'){const el=document.getElementById(id);if(el)el.textContent=msg;}
+window.copyCode=()=>navigator.clipboard?.writeText(roomCode).then(()=>showToast('📋','Kode disalin!',true));
+
+window.createRoom=async()=>{
+  const n=document.getElementById('nameInput').value.trim();
+  if(!n){showErr('Masukkan nama!');return;}
+  myName=n;isSolo=false;isHost=true;
+  document.getElementById('btnCreate').disabled=true;showErr('Membuat room...');
+  const code=genCode();myId=genPid();roomCode=code;
+  roomRef=ref(db,`rooms/${code}`);playersRef=ref(db,`rooms/${code}/players`);
+  await set(roomRef,{code,host:myId,status:'lobby',diffMode,createdAt:serverTimestamp(),questionSeed:Math.floor(Math.random()*999999)});
+  await set(ref(db,`rooms/${code}/players/${myId}`),{id:myId,name:myName,charIdx:myCharIdx,score:0,correct:0,wrong:0,blocks:0,qIdx:0,finished:false,joinedAt:serverTimestamp()});
+  document.getElementById('btnCreate').disabled=false;showErr('');
+  goLobby();
+};
+
+window.joinRoom=async()=>{
+  const n=document.getElementById('nameInput').value.trim();
+  if(!n){showErr('Masukkan nama!','errJoin');return;}
+  const code=document.getElementById('codeInput').value.trim().toUpperCase();
+  if(code.length!==4){showErr('Kode 4 huruf!','errJoin');return;}
+  myName=n;isSolo=false;isHost=false;
+  document.getElementById('btnJoin').disabled=true;showErr('Mencari...','errJoin');
+  const snap=await get(ref(db,`rooms/${code}`));
+  if(!snap.exists()){showErr('Room tidak ditemukan!','errJoin');document.getElementById('btnJoin').disabled=false;return;}
+  const room=snap.val();
+  if(room.status!=='lobby'){showErr('Game sudah dimulai!','errJoin');document.getElementById('btnJoin').disabled=false;return;}
+  myId=genPid();roomCode=code;diffMode=room.diffMode;
+  roomRef=ref(db,`rooms/${code}`);playersRef=ref(db,`rooms/${code}/players`);
+  await set(ref(db,`rooms/${code}/players/${myId}`),{id:myId,name:myName,charIdx:myCharIdx,score:0,correct:0,wrong:0,blocks:0,qIdx:0,finished:false,joinedAt:serverTimestamp()});
+  document.getElementById('btnJoin').disabled=false;showErr('','errJoin');
+  goLobby();
+};
+
+function goLobby(){
+  setScreen('lobbyScreen');
+  document.getElementById('lobbyCode').textContent=roomCode;
+  document.getElementById('btnStartGame').style.display=isHost?'flex':'none';
+  dbOff();
+  dbOn(playersRef,snap=>renderLobbyPlayers(snap.val()||{}));
+  dbOn(roomRef,snap=>{
+    const r=snap.val();if(!r){goIntroClean();return;}
+    if(r.status==='countdown') startCountdown(r);
+    if(r.status==='playing')   startActualGame(r);
+  });
+}
+
+function renderLobbyPlayers(players){
+  const arr=Object.values(players).sort((a,b)=>(a.joinedAt||0)-(b.joinedAt||0));
+  document.getElementById('pCount').textContent=`(${arr.length})`;
+  document.getElementById('playersList').innerHTML=arr.map(p=>`
+    <div class="plr-row ${p.id===myId?'me':''}">
+      <div class="plr-ico">${CHARS[p.charIdx||0].svg}</div>
+      <span class="plr-nm">${p.name}${p.id===myId?' (Kamu)':''}</span>
+    </div>`).join('');
+  if(arr.length<2){
+    document.getElementById('lobbySt').innerHTML='Butuh minimal <strong>2 pemain</strong><span class="dots"></span>';
+    if(isHost)document.getElementById('btnStartGame').disabled=true;
+  } else {
+    document.getElementById('lobbySt').innerHTML=`<strong>${arr.length} pemain</strong> siap!`;
+    if(isHost)document.getElementById('btnStartGame').disabled=false;
+  }
+}
+
+window.leaveRoom=async()=>{
+  dbOff();
+  if(myId&&roomCode) await remove(ref(db,`rooms/${roomCode}/players/${myId}`)).catch(()=>{});
+  goIntroClean();
+};
+function goIntroClean(){
+  dbOff();roomCode=null;myId=null;isHost=false;roomRef=null;playersRef=null;
+  document.getElementById('btnCreate').disabled=false;
+  document.getElementById('btnJoin').disabled=false;
+  showErr('');showErr('','errJoin');
+  document.getElementById('codeInput').value='';
+  setScreen('introScreen');
+}
+window.goIntro=goIntroClean;
+window.hostStart=async()=>{if(isHost)await update(roomRef,{status:'countdown'});};
+
+/* countdown */
+function doCountdown(cb){
+  setScreen('countScreen');let n=3;const el=document.getElementById('cntN');
+  const tick=()=>{if(n===0){cb();return;}el.textContent=n;el.style.animation='none';
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{el.style.animation='cpop .55s ease';}));n--;setTimeout(tick,1000);};tick();
+}
+function startCountdown(room){
+  setScreen('countScreen');dbOff();
+  dbOn(roomRef,snap=>{const r=snap.val();if(!r)return;if(r.status==='playing') startActualGame(r);});
+  if(isHost){let n=3;const el=document.getElementById('cntN');
+    const tick=()=>{el.textContent=n;el.style.animation='none';
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{el.style.animation='cpop .55s ease';}));
+      if(n===0){update(roomRef,{status:'playing'});return;}n--;setTimeout(tick,1000);};tick();}
+}
+function startActualGame(room){
+  dbOff();diffMode=room.diffMode;
+  qList=buildQList(room.questionSeed);
+  qIdx=0;myScore=0;myAnswers=[];blockCount=0;lavaH=0;
+  setScreen('gameScreen');
+  document.getElementById('lbStrip').classList.add('on');
+  setHudAv(myCharIdx);
+  document.getElementById('hudNm').textContent=myName;
+  loadCharSvg(myCharIdx);
+  requestAnimationFrame(()=>{ drawTower(); loadQ(); });
+  dbOn(playersRef,snap=>renderLiveLB(snap.val()||{}));
+  dbOn(playersRef,snap=>{
+    const ps=Object.values(snap.val()||{});
+    if(ps.length>0&&ps.every(p=>p.finished)) endGame(snap.val());
+  });
+}
+
+function buildQList(seed){
+  function sh(arr,s){let st=s>>>0;function r(){st=(st*1664525+1013904223)&0xffffffff;return(st>>>0)/0xffffffff;}const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+  if(diffMode===0) return[...sh(Q[1],seed).map(q=>({...q,level:1})),...sh(Q[2],seed+1).map(q=>({...q,level:2})),...sh(Q[3],seed+2).map(q=>({...q,level:3}))];
+  return sh(Q[diffMode],seed).map(q=>({...q,level:diffMode}));
+}
+
+/* ══ LOAD QUESTION ══ */
+function loadQ(){
+  if(qIdx>=qList.length){markDone();return;}
+  answered=false;
+  const q=qList[qIdx];const total=qList.length;
+  document.getElementById('hudPt').textContent=myScore.toLocaleString();
+  document.getElementById('hudMid').innerHTML=`${LVL_N[q.level].split(' ')[1]}<br><span class="hud-qn">${qIdx+1}/${total}</span>`;
+  const badge=document.getElementById('lvlBadge');badge.textContent=LVL_N[q.level];badge.className='lvlbadge '+LVL_C[q.level];
+  document.getElementById('qText').textContent=q.q;
+  document.getElementById('feedback').textContent='';document.getElementById('feedback').className='fb';
+  document.getElementById('btnNext').style.display='none';
+  const grid=document.getElementById('optsGrid');grid.innerHTML='';
+  q.o.forEach((opt,oi)=>{
+    const btn=document.createElement('button');btn.className='opt';btn.id='o'+oi;
+    btn.innerHTML=`<span class="optl">${'ABCD'[oi]}</span>${opt}`;
+    btn.onclick=()=>pick(oi);grid.appendChild(btn);
+  });
+  qStart=Date.now();
+}
+
+/* ══ ANSWER ══ */
+async function pick(idx){
+  if(answered)return;answered=true;
+  const elapsed=(Date.now()-qStart)/1000;
+  const q=qList[qIdx];const correct=idx===q.a;
+  let pts=correct?calcPts(q.level,elapsed):0;
+  if(correct)myScore+=pts;
+
+  document.querySelectorAll('.opt').forEach(b=>b.disabled=true);
+  document.getElementById('o'+idx).classList.add(correct?'ook':'ono');
+  if(!correct)document.getElementById('o'+q.a).classList.add('orv');
+
+  const fb=document.getElementById('feedback');
+  if(correct){
+    const sp=elapsed<5?'🔥 Super cepat!':elapsed<10?'⚡ Cepat!':elapsed<20?'👍 Bagus!':'✅ Benar!';
+    fb.textContent=`+${pts} poin · ${elapsed.toFixed(1)}s · ${sp}`;fb.className='fb fbok';
+  } else {
+    fb.textContent=`Jawaban salah. Benar: ${q.o[q.a]}`;fb.className='fb fbno';
+  }
+
+  // ── TOWER LOGIC ──────────────────────────────────────────
+  // BENAR  → tower naik 1 blok (blockCount++)
+  // SALAH  → tower TIDAK naik
+  // TIAP SOAL dijawab → lava naik setinggi 1 blok (sama dengan BLOCK_H)
+  // Jadi: jawab benar = tower dan lava sama-sama naik → posisi aman
+  //       jawab salah = hanya lava naik → jarak mengecil = bahaya!
+  if (correct) blockCount++;
+  lavaH += BLOCK_H;   // lava naik 1 blok per soal (pakai konstanta yang sama)
+
+  drawTower();
+  startLavaAnim();
+
+  myAnswers.push({qn:qIdx+1,q:q.q,level:q.level,correct,myAns:q.o[idx],correctAns:q.o[q.a],pts,elapsed:Math.round(elapsed*10)/10});
+
+  if(!isSolo){
+    await update(ref(db,`rooms/${roomCode}/players/${myId}`),{
+      score:myScore,correct:myAnswers.filter(a=>a.correct).length,
+      wrong:myAnswers.filter(a=>!a.correct).length,blocks:blockCount,qIdx:qIdx+1,
+    }).catch(()=>{});
+  }
+
+  showToast(correct?'✅':'❌',correct?`+${pts} poin!`:'Salah!',correct);
+  document.getElementById('btnNext').style.display='block';
+}
+
+window.nextQ=()=>{qIdx++;loadQ();};
+
+async function markDone(){
+  if(isSolo){endGame(null);return;}
+  const times=myAnswers.filter(a=>a.correct).map(a=>a.elapsed);
+  const avg=times.length?(times.reduce((s,v)=>s+v,0)/times.length).toFixed(1):'-';
+  await update(ref(db,`rooms/${roomCode}/players/${myId}`),{
+    score:myScore,correct:myAnswers.filter(a=>a.correct).length,
+    wrong:myAnswers.filter(a=>!a.correct).length,blocks:blockCount,
+    qIdx:qList.length,finished:true,avgTime:avg,
+  }).catch(()=>{});
+}
+
+/* ══ LIVE LEADERBOARD ══ */
+function renderLiveLB(players){
+  const arr=Object.values(players).sort((a,b)=>b.score-a.score);
+  document.getElementById('lbScrl').innerHTML=arr.map((p,i)=>`
+    <div class="lbent ${p.id===myId?'lme':''}">
+      <div class="lbrk">${i+1}</div>
+      <div class="lbav">${CHARS[p.charIdx||0].svg}</div>
+      <div class="lbinf"><div class="lbnm">${p.name}</div><div class="lbsc">${(p.score||0).toLocaleString()}</div></div>
+    </div>`).join('');
+}
+
+/* ══ END GAME ══ */
+function endGame(players){
+  dbOff();
+  if(lavaAnimId){cancelAnimationFrame(lavaAnimId);lavaAnimId=null;}
+  setScreen('resultScreen');
+  const correct=myAnswers.filter(a=>a.correct).length;
+  const wrong=myAnswers.filter(a=>!a.correct).length;
+  const times=myAnswers.filter(a=>a.correct).map(a=>a.elapsed);
+  const avg=times.length?(times.reduce((s,v)=>s+v,0)/times.length).toFixed(1):'-';
+  const pct=myAnswers.length?Math.round(correct/myAnswers.length*100):0;
+  document.getElementById('resFinal').textContent=myScore.toLocaleString();
+  document.getElementById('resSub').textContent=myName;
+  document.getElementById('stOk').textContent=correct;
+  document.getElementById('stNo').textContent=wrong;
+  document.getElementById('stAvg').textContent=avg+(avg==='-'?'':'s');
+  const ttl=['📚 Ayo Tingkatkan!','💪 Terus Berlatih!','🎯 Bagus!','🏆 Luar Biasa!'];
+  document.getElementById('resTitle').textContent=pct>=80?ttl[3]:pct>=60?ttl[2]:pct>=40?ttl[1]:ttl[0];
+  document.getElementById('resIco').textContent=pct>=80?'🏆':pct>=60?'🎯':pct>=40?'💪':'📚';
+  setTimeout(()=>{document.getElementById('pctFill').style.width=pct+'%';},300);
+
+  const flb=document.getElementById('finalLb');
+  if(players){
+    flb.style.display='flex';
+    const arr=Object.values(players).sort((a,b)=>b.score-a.score);
+    const med=['🥇','🥈','🥉'];
+    flb.innerHTML=`<div class="flbttl">🏆 Papan Peringkat Akhir</div>`+arr.map((p,i)=>`
+      <div class="flbrow ${p.id===myId?'me':''}">
+        <div class="flbpos">${med[i]||'#'+(i+1)}</div>
+        <div class="flbav">${CHARS[p.charIdx||0].svg}</div>
+        <div class="flbinf"><div class="flbnm">${p.name}${p.id===myId?' (Kamu)':''}</div>
+          <div class="flbst">✅${p.correct||0} ❌${p.wrong||0} 🏰${p.blocks||0} blok</div></div>
+        <div class="flbsc">${(p.score||0).toLocaleString()}</div>
+      </div>`).join('');
+  } else {flb.style.display='none';}
+
+  document.getElementById('revList').innerHTML=myAnswers.map(a=>`
+    <div class="revitem ${a.correct?'riok':'riw'}">
+      <div class="revn">${a.qn}</div>
+      <div style="flex:1;min-width:0;">
+        <div class="revq">${a.q}</div>
+        <div class="reva">${a.correct?`<strong>✅ ${a.correctAns}</strong>`:`<span class="ma">❌ ${a.myAns}</span> · <strong>✅ ${a.correctAns}</strong>`}
+          <span style="color:var(--muted);margin-left:.3rem;">${a.elapsed}s</span></div>
+      </div>
+      <div class="revp">${a.pts>0?'+'+a.pts:'0'}</div>
+    </div>`).join('');
+    // ── KIRIM KE GOOGLE SHEETS ──────────────────────
+const GSHEET_URL = "https://script.google.com/macros/s/AKfycbwe8dH9MmpsHfTnIFgvt1DrkyU8vKmUil6pb8VMqAUSJP4A_Ss_izoNri2adMHiGcJm7w/exec"; //
+
+fetch(GSHEET_URL, {
+  method: "POST",
+  mode: "no-cors",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    name: myName,
+    score: myScore,
+    totalCorrect: correct,
+    totalWrong: wrong,
+    answers: myAnswers
+  })
+}).then(() => {
+  console.log("Data berhasil dikirim ke Google Sheets");
+}).catch(err => {
+  console.error("Gagal kirim data:", err);
+});
+// ────────────────────────────────────────────────
+  if(pct>=80)confetti();
+}
+
+/* ══ TOAST ══ */
+let toastT=null;
+function showToast(em,tx,win){
+  const t=document.getElementById('toast');
+  document.getElementById('tEm').textContent=em;document.getElementById('tTx').textContent=tx;
+  t.className='toast show '+(win?'tw':'tl');
+  clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),1500);
+}
+window.showToast=showToast;
+
+/* ══ CONFETTI ══ */
+function confetti(){
+  const cols=['#FFD700','#FF6600','#FF4500','#22c55e','#9f7aea','#FF6584'];
+  for(let i=0;i<65;i++){const el=document.createElement('div');el.className='cf';el.style.cssText=`left:${Math.random()*100}%;top:-10px;background:${cols[Math.floor(Math.random()*cols.length)]};animation-duration:${1+Math.random()*1.5}s;animation-delay:${Math.random()*.8}s;width:${5+Math.random()*8}px;height:${5+Math.random()*8}px;`;document.body.appendChild(el);setTimeout(()=>el.remove(),3200);}
+}
+
+/* resize tower canvas when window resizes */
+window.addEventListener('resize',()=>{ if(document.getElementById('gameScreen').classList.contains('active')) drawTower(); });
+</script>
+</body>
+</html>
